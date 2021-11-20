@@ -24,6 +24,7 @@ import tvm._ffi
 from tvm._ffi import register_func as _register_func
 from tvm.runtime import Object
 
+from .cuda_scope import CudaGlobalScope, set_cuda_target_arch
 from . import _ffi_api
 
 
@@ -113,6 +114,8 @@ class Target(Object):
 
     def __enter__(self):
         _ffi_api.TargetEnterScope(self)
+        if self.kind.name == "cuda":
+            self.enter_cuda_scope()
         return self
 
     def __exit__(self, ptype, value, trace):
@@ -138,6 +141,14 @@ class Target(Object):
         ValueError if current target is not set.
         """
         return _ffi_api.TargetCurrent(allow_none)
+
+    def enter_cuda_scope(self):
+        if self.arch:
+            set_cuda_target_arch(self.arch)
+
+    @property
+    def arch(self):
+        return self.attrs.get("arch", None)
 
     @property
     def max_num_threads(self):

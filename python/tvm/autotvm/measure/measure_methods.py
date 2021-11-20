@@ -39,11 +39,11 @@ import tvm.ir.transform
 from tvm import nd
 from tvm import rpc as _rpc
 from tvm.autotvm.env import AutotvmGlobalScope, reset_global_scope
-from tvm.contrib import ndk, nvcc, stackvm, tar
+from tvm.contrib import ndk, stackvm, tar
 from tvm.contrib.popen_pool import PopenPoolExecutor
 from tvm.driver import build
 from tvm.error import TVMError
-from tvm.target import Target
+from tvm.target import Target, set_cuda_target_arch, get_cuda_target_arch
 
 from ..env import AutotvmGlobalScope
 from ..task.space import InstantiationError
@@ -480,7 +480,7 @@ def _build_func_common(
         opts = build_option or {}
         if check_gpu:  # Add verify pass to filter out invalid configs in advance.
             opts["tir.add_lower_pass"] = [(2, gpu_verify_pass(**check_gpu))]
-        if cuda_arch:
+        if cuda_arch and get_cuda_target_arch() is None:
             set_cuda_target_arch(cuda_arch)
 
         # if target is vta, we need to use vta build
@@ -787,32 +787,6 @@ def check_remote(target, device_key, host=None, port=None, priority=100, timeout
     t.start()
     t.join(timeout)
     return not t.is_alive()
-
-
-@tvm._ffi.register_func
-def tvm_callback_cuda_compile(code):
-    """use nvcc to generate ptx code for better optimization"""
-    curr_cuda_target_arch = AutotvmGlobalScope.current.cuda_target_arch
-    # e.g., target arch could be [
-    #   "-gencode", "arch=compute_52,code=sm_52",
-    #   "-gencode", "arch=compute_70,code=sm_70"
-    # ]
-    target = "fatbin" if isinstance(curr_cuda_target_arch, list) else "ptx"
-    ptx = nvcc.compile_cuda(code, target=target, arch=AutotvmGlobalScope.current.cuda_target_arch)
-    return ptx
-
-
-def set_cuda_target_arch(arch):
-    """set target architecture of nvcc compiler
-
-    Parameters
-    ----------
-    arch: str or list
-        The argument of nvcc -arch. (e.g. "sm_51", "sm_62")
-        it can also be a count of gencode arguments pass to nvcc command line,
-        e.g., ["-gencode", "arch=compute_52,code=sm_52", "-gencode", "arch=compute_70,code=sm_70"]
-    """
-    AutotvmGlobalScope.current.cuda_target_arch = arch
 
 
 def gpu_verify_pass(**kwargs):

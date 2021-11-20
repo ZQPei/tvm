@@ -42,7 +42,7 @@ import tvm._ffi
 from tvm.runtime import Object, module, ndarray
 from tvm.driver import build_module
 from tvm.ir import transform
-from tvm.autotvm.measure.measure_methods import set_cuda_target_arch
+from tvm.target import set_cuda_target_arch, get_cuda_target_arch
 from tvm.autotvm.env import AutotvmGlobalScope, reset_global_scope
 from tvm.contrib import tar, ndk
 from tvm.contrib.popen_pool import PopenWorker, PopenPoolExecutor, StatusKind
@@ -551,7 +551,7 @@ class LocalRPCMeasureContext:
         from tvm.rpc.server import Server
 
         dev = tvm.device("cuda", 0)
-        if dev.exist:
+        if dev.exist and get_cuda_target_arch() is None:
             cuda_arch = "sm_" + "".join(dev.compute_version.split("."))
             set_cuda_target_arch(cuda_arch)
         self.tracker = Tracker(port=9000, port_end=10000, silent=True)

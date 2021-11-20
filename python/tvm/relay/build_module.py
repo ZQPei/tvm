@@ -25,7 +25,6 @@ from tvm.ir import IRModule
 
 from tvm.ir.transform import PassContext
 from tvm.tir import expr as tvm_expr
-from tvm.target import Target
 from .. import nd as _nd, autotvm, register_func
 from ..target import Target
 from ..contrib import graph_executor as _graph_rt
@@ -225,7 +224,10 @@ class BuildModule(object):
         # Setup the params.
         if params:
             self._set_params(params)
-        mod = self._optimize(mod, target)
+
+        with target:
+            mod = self._optimize(mod, target)
+
         # Get artifacts
         params = self.get_params()
 

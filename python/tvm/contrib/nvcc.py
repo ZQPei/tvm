@@ -22,6 +22,7 @@ import subprocess
 import os
 import warnings
 
+import tvm
 import tvm._ffi
 from tvm.runtime import ndarray as nd
 
@@ -29,7 +30,7 @@ from . import utils
 from .._ffi.base import py_str
 
 
-def compile_cuda(code, target="ptx", arch=None, options=None, path_target=None):
+def compile_cuda(code, compile_target="ptx", arch=None, options=None, path_target=None):
     """Compile cuda code with NVCC from env.
 
     Parameters
@@ -37,7 +38,7 @@ def compile_cuda(code, target="ptx", arch=None, options=None, path_target=None):
     code : str
         The cuda code.
 
-    target : str
+    compile_target : str
         The target format
 
     arch : str
@@ -55,10 +56,10 @@ def compile_cuda(code, target="ptx", arch=None, options=None, path_target=None):
         The bytearray of the cubin
     """
     temp = utils.tempdir()
-    if target not in ["cubin", "ptx", "fatbin"]:
-        raise ValueError("target must be in cubin, ptx, fatbin")
+    if compile_target not in ["cubin", "ptx", "fatbin"]:
+        raise ValueError("compile_target must be in cubin, ptx, fatbin")
     temp_code = temp.relpath("my_kernel.cu")
-    temp_target = temp.relpath("my_kernel.%s" % target)
+    temp_target = temp.relpath("my_kernel.%s" % compile_target)
 
     with open(temp_code, "w") as out_file:
         out_file.write(code)
@@ -72,10 +73,12 @@ def compile_cuda(code, target="ptx", arch=None, options=None, path_target=None):
 
     file_target = path_target if path_target else temp_target
     cmd = ["nvcc"]
-    cmd += ["--%s" % target, "-O3"]
+    cmd += ["--%s" % compile_target, "-O3"]
     if isinstance(arch, list):
         cmd += arch
-    else:
+    if isinstance(arch, tvm.ir.container.Array):
+        cmd += list(arch)
+    elif isinstance(arch, str):
         cmd += ["-arch", arch]
 
     if options:
@@ -242,10 +245,10 @@ def get_target_compute_version(target=None):
             return major + "." + minor
 
     # 2. Global scope
-    from tvm.autotvm.env import AutotvmGlobalScope  # pylint: disable=import-outside-toplevel
+    from tvm.target.cuda_scope import CudaGlobalScope  # pylint: disable=import-outside-toplevel
 
-    if AutotvmGlobalScope.current.cuda_target_arch:
-        major, minor = AutotvmGlobalScope.current.cuda_target_arch.split("_")[1]
+    if CudaGlobalScope.current.cuda_target_arch:
+        major, minor = CudaGlobalScope.current.cuda_target_arch.split("_")[1]
         return major + "." + minor
 
     # 3. GPU
