@@ -65,11 +65,8 @@ def set_cuda_target_arch(arch, gencode=True):
         cuda_arch = None
     elif isinstance(arch, str):
         if gencode:
-            compute_version = arch.split('_')[1]
-            cuda_arch = [
-                "-gencode",
-                f"arch=compute_{compute_version},code=sm_{compute_version}"
-            ]
+            compute_version = arch.split("_")[1]
+            cuda_arch = ["-gencode", f"arch=compute_{compute_version},code=sm_{compute_version}"]
         else:
             cuda_arch = arch
     elif isinstance(arch, (list, tvm.ir.container.Array)):
@@ -79,7 +76,8 @@ def set_cuda_target_arch(arch, gencode=True):
         raise TypeError(
             "arch is expected to be str or "
             + "a list or NoneType, but received "
-            + "{}".format(type(arch)))
+            + "{}".format(type(arch))
+        )
 
     CudaGlobalScope.current._old_cuda_target_arch = get_cuda_target_arch()
     CudaGlobalScope.current.cuda_target_arch = cuda_arch
@@ -89,12 +87,9 @@ def set_cuda_target_arch(arch, gencode=True):
 def get_cuda_target_arch(target=None):
     """get target architecture of nvcc compiler"""
     if target is None:
-        if isinstance(CudaGlobalScope.current.cuda_target_arch, tvm.ir.container.Array):
-            return list(CudaGlobalScope.current.cuda_target_arch)
         return CudaGlobalScope.current.cuda_target_arch
 
-    else:
-        return tvm.target.Target(target=target).arch
+    return tvm.target.Target(target=target).arch
 
 
 @_register_func("target.reset_cuda_target_arch")

@@ -24,7 +24,7 @@ import tvm._ffi
 from tvm._ffi import register_func as _register_func
 from tvm.runtime import Object
 
-from .cuda_scope import CudaGlobalScope, set_cuda_target_arch
+from .cuda_scope import set_cuda_target_arch
 from . import _ffi_api
 
 

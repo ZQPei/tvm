@@ -224,10 +224,7 @@ class BuildModule(object):
         # Setup the params.
         if params:
             self._set_params(params)
-
-        with target:
-            mod = self._optimize(mod, target)
-
+        mod = self._optimize(mod, target)
         # Get artifacts
         params = self.get_params()
 
