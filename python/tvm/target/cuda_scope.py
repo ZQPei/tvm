@@ -96,3 +96,12 @@ def get_cuda_target_arch(target=None):
 def reset_cuda_target_arch():
     """reset target architecture of nvcc compiler to None"""
     CudaGlobalScope.current.cuda_target_arch = None
+
+
+def is_cuda_available():
+    return tvm.cuda(0).exist
+
+
+def get_device_maximum_compute_version():
+    if tvm.cuda(0).exist:
+        return tvm.cuda(0).compute_version

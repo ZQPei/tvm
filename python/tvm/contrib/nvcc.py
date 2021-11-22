@@ -76,7 +76,7 @@ def compile_cuda(code, compile_target="ptx", arch=None, options=None, path_targe
     cmd += ["--%s" % compile_target, "-O3"]
     if isinstance(arch, list):
         cmd += arch
-    if isinstance(arch, tvm.ir.container.Array):
+    elif isinstance(arch, tvm.ir.container.Array):
         cmd += list(arch)
     elif isinstance(arch, str):
         cmd += ["-arch", arch]

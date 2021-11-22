@@ -394,6 +394,15 @@ def cuda(dev_id=0):
     return Device(2, dev_id)
 
 
+def is_cuda_available():
+    return cuda(0).exist
+
+
+def get_device_maximum_compute_version():
+    if is_cuda_available():
+        return tvm.cuda(0).compute_version
+
+
 def gpu(dev_id=0):
     """Construct a CUDA GPU device
 
